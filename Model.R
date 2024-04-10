@@ -1,30 +1,31 @@
-# Assuming necessary packages are installed
+# Load necessary libraries
 library(caret)
-library(Biostrings) # Not used in model building, but assumed for consistency
+library(Biostrings) # Included for consistency, though not used here
 
-# Simulated dataset
-set.seed(123) # For reproducibility
-sequence_lengths <- rnorm(100, mean=500, sd=200) # Simulate sequence lengths
-labels <- ifelse(sequence_lengths > 500, "Polygomer", "Monomer") # Label based on length
-data <- data.frame(SequenceLength = sequence_lengths, Label = as.factor(labels))
-
-# Splitting dataset into training (80%) and testing (20%)
+# Set seed for reproducibility
 set.seed(123)
-trainIndex <- createDataPartition(data$Label, p = .8, list = FALSE, times = 1)
-dataTrain <- data[trainIndex,]
-dataTest  <- data[-trainIndex,]
 
-# Train a logistic regression model
+# Simulate dataset
+sequence_lengths <- rnorm(100, mean=500, sd=200) # Generate random sequence lengths
+labels <- ifelse(sequence_lengths > 500, "Polyomer", "Monomer") # Assign labels based on length
+data <- data.frame(SequenceLength = sequence_lengths, Label = as.factor(labels)) # Create dataframe
+
+# Split dataset into training and testing sets
+set.seed(123) # Ensure reproducibility
+trainIndex <- createDataPartition(data$Label, p = .8, list = FALSE, times = 1) # Partition data
+dataTrain <- data[trainIndex,] # Training set
+dataTest  <- data[-trainIndex,] # Testing set
+
+# Train logistic regression model
 model <- glm(Label ~ SequenceLength, data = dataTrain, family = "binomial")
 
 # Predict on test data
-predictions <- predict(model, newdata = dataTest, type = "response")
-predictedClasses <- ifelse(predictions > 0.5, "Polygomer", "Monomer")
+predictions <- predict(model, newdata = dataTest, type = "response") # Get predictions
+predictedClasses <- ifelse(predictions > 0.5, "Polymer", "Monomer") # Convert to class labels
 
 # Assess model accuracy
-confMat <- confusionMatrix(as.factor(predictedClasses), dataTest$Label)
-print(confMat)
+confMat <- confusionMatrix(as.factor(predictedClasses), dataTest$Label) # Generate confusion matrix
+print(confMat) # Print confusion matrix
 
 # Save the model
-saveRDS(model, "protein_model.rds")
-
+saveRDS(model, "protein_model.rds") # Save model for later use

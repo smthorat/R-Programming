@@ -9,7 +9,7 @@ library(ggplot2)
 
 # Define UI
 ui <- dashboardPage(
-    dashboardHeader(title = "Protein Sequence Classifier"),
+    dashboardHeader(title = "Protein Sequence"),
     dashboardSidebar(
         sidebarMenu(
             menuItem("Predict", tabName = "predict", icon = icon("dna")),
@@ -37,17 +37,23 @@ ui <- dashboardPage(
 
 # Define server logic
 server <- function(input, output) {
-    observeEvent(input$predict, {
-        sequence_length <- input$sequence_length
-        # Ensure model is loaded
-        model <- readRDS("protein_model.rds")
-        prediction_prob <- predict(model, newdata = data.frame(SequenceLength = sequence_length), type = "response")
-        predicted_class <- ifelse(prediction_prob > 0.5, "Polygomer", "Monomer")
-
-        output$prediction_result <- renderText({
-            paste("Based on the sequence length, the protein is predicted to be a:", predicted_class)
-        })
+  observeEvent(input$predict, {
+    tryCatch({
+      sequence_length <- input$sequence_length
+      # Ensure model is loaded
+      model <- readRDS("protein_model.rds")
+      prediction_prob <- predict(model, newdata = data.frame(SequenceLength = sequence_length), type = "response")
+      predicted_class <- ifelse(prediction_prob > 0.5, "Polymer", "Monomer")
+      
+      output$prediction_result <- renderText({
+        paste("Based on the sequence length, the protein is predicted to be a:", predicted_class)
+      })
+    }, error = function(e) {
+      output$prediction_result <- renderText({
+        paste("Error in prediction:", e$message)
+      })
     })
+  })
 
     output$accuracyPlot <- renderPlot({
         # Load or recalculate the necessary data for the confusion matrix
